@@ -5,6 +5,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,15 +18,17 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Toolkit.HighPerformance" Version="7.1.2" />
+    <PackageReference Include="MySql.Data" Version="8.0.27" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="LetsBeRationalLib">
-      <HintPath>..\..\LetsBeRationalLib.cs\LetsBeRationalLib\bin\Release\net6.0\LetsBeRationalLib.dll</HintPath>
+      <HintPath>..\..\LetsBeRationalLib.cs\LetsBeRationalLib\bin\Debug\net6.0\LetsBeRationalLib.dll</HintPath>
     </Reference>
     <Reference Include="ReadFredTreasuryRates">
-      <HintPath>..\..\ReadFredTreasuryRates.cs\ReadFredTreasuryRates\bin\Release\net6.0\ReadFredTreasuryRates.dll</HintPath>
+      <HintPath>..\..\ReadFredTreasuryRates.cs\ReadFredTreasuryRates\bin\Debug\net6.0\ReadFredTreasuryRates.dll</HintPath>
     </Reference>
   </ItemGroup>
 

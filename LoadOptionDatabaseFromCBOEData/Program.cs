@@ -3,7 +3,7 @@
 // It uses my modified version of Jaeckel's Lets Be Rational C++ program to compute option greeks
 
 #define PARFOR_READDATA
-//undef PARFOR_ANALYZE;
+#define ONLY25STRIKES
 
 using System;
 using System.Collections.Generic;
@@ -151,7 +151,7 @@ namespace LoadOptionDataFromCBOEData
 
             // now read actual option data from each zip file (we have 1 zip file per day), row by row, and add it to SortedList for that date
 #if PARFOR_READDATA
-            Parallel.ForEach(zipFileNameArray, new ParallelOptions { MaxDegreeOfParallelism = 32 }, (zipFileName) =>
+            Parallel.ForEach(zipFileNameArray, new ParallelOptions { MaxDegreeOfParallelism = 16 }, (zipFileName) =>
             {
 #else
             foreach (string zipFileName in zipFileNameArray)

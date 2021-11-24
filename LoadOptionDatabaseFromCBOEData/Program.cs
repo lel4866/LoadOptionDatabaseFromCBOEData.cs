@@ -101,7 +101,8 @@ namespace LoadOptionDataFromCBOEData
         static void Main()
         {
             watch.Start();
-#if true
+
+#if false
             // get first date
             DateTime first_dt, last_dt;
             string get_first_date_cmd = "select min(quotedatetime) from OptionData;";

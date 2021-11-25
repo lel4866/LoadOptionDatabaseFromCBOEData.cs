@@ -426,7 +426,7 @@ namespace LoadOptionDataFromCBOEData
             {
                 sqlCommand.ExecuteNonQuery();
             }
-            catch (System.Data.SqlClient.SqlException ex)
+            catch (NpgsqlException)
             {
                 var xxx = 1;
             }

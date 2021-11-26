@@ -2,7 +2,6 @@
 // It also computes Greeks for those options (it throws away the greeks from CBOEDataShop
 // It uses my modified version of Jaeckel's Lets Be Rational C++ program to compute option greeks
 
-#define PARFOR_READDATA
 #define ONLY25STRIKES
 
 using System;
@@ -102,87 +101,6 @@ namespace LoadOptionDataFromCBOEData
         {
             watch.Start();
 
-#if false
-            // get first date
-            DateTime first_dt, last_dt;
-            string get_first_date_cmd = "select min(quotedatetime) from OptionData;";
-            string get_last_date_cmd = "select max(quotedatetime) from OptionData;";
-            using (NpgsqlConnection conn1 = new(connectionString))
-            {
-                conn1.Open();
-                Npgsql.NpgsqlCommand sqlCommand1 = new(get_first_date_cmd, conn1); // Postgres
-                first_dt = Convert.ToDateTime(sqlCommand1.ExecuteScalar());
-                Npgsql.NpgsqlCommand sqlCommand2 = new(get_last_date_cmd, conn1); // Postgres
-                last_dt = Convert.ToDateTime(sqlCommand2.ExecuteScalar());
-            }
-
-            // generate a list of weekdays
-            List < DateTime > dt_list = new() { first_dt };
-            int numDays = (last_dt - first_dt).Days;
-            TimeSpan one_day = new TimeSpan(1, 0, 0, 0);
-            DateTime dt = first_dt;
-            while(dt <= last_dt) {
-                if (dt.DayOfWeek != DayOfWeek.Saturday && dt.DayOfWeek != DayOfWeek.Sunday)
-                {
-                    dt_list.Add(dt);
-                }
-                dt = dt.Add(one_day);
-            }
-            // now read each day in parallel
-            TimeSpan oneday = new TimeSpan(23, 59, 59);
-            Parallel.ForEach(dt_list, new ParallelOptions { MaxDegreeOfParallelism = 8 }, (day) =>
-            {
-                //Console.WriteLine($"Processing {day}");
-                string sqlDate1 = day.ToString("yyyy-MM-dd 00:00:00");
-                string sqlDate2 = day.ToString("yyyy-MM-dd 23:59:59");
-                using NpgsqlConnection conn = new(connectionString);
-                conn.Open();
-                string command = $"SELECT * FROM OptionData WHERE quotedatetime BETWEEN '{sqlDate1}' AND '{sqlDate2}';"; 
-                Npgsql.NpgsqlCommand sqlCommand = new(command, conn); // Postgres
-                try
-                {
-                    NpgsqlDataReader reader = sqlCommand.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        int id = reader.GetInt32(0);
-                        DateTime quote_dt = reader.GetDateTime(1);
-                        DateTime expiration = reader.GetDateTime(2);
-                        int strike = reader.GetInt32(3);
-                        char option_type = reader.GetChar(4);
-                        char[] root = new char[6];
-                        long root_len = reader.GetChars(5, 0, root, 0, 6);
-                        float underlying = (float)reader.GetDouble(6);
-                        float bid = (float)reader.GetDouble(7);
-                        float ask = (float)reader.GetDouble(8);
-                        float iv = (float)reader.GetDouble(9);
-                        float delta = (float)reader.GetDouble(10);
-                        float gamma = (float)reader.GetDouble(11);
-                        float theta = (float)reader.GetDouble(12);
-                        float vega = (float)reader.GetDouble(13);
-                        float rho = (float)reader.GetDouble(14);
-                        int open_interest = reader.GetInt32(15);
-                        float rate = (float)reader.GetDouble(16);
-                        float dividend_yield = (float)reader.GetDouble(17);
-                        int tt = 1;
-                        //Console.WriteLine("{0} {1} {2}", rdr.GetInt32(0), rdr.GetString(1),rdr.GetInt32(2));
-                    }
-                }
-                catch (System.Data.SqlClient.SqlException ex)
-                {
-                    var xxx = 1;
-                }
-                catch (Exception ex)
-                {
-                    var xxx = 1;
-                }
-            });
-
-            watch.Stop();
-            Console.WriteLine($"LoadOptionDataFromCBOEData Elpased time: {watch.ElapsedMilliseconds / 1000.0}");
-
-            return;
-#endif
-
             try
             {
                 var program = new Program();
@@ -213,22 +131,7 @@ namespace LoadOptionDataFromCBOEData
 
         void Run()
         {
-#if false
-            try
-            {
-                //var conn = new MySql.Data.MySqlClient.MySqlConnection(connectionString);
-                using SqlConnection conn = new(connectionString);
-                conn.Open();
-            }
-            catch (SqlException ex)
-            //catch (MySql.Data.MySqlClient.MySqlException ex)
-            {
-                string xxx = ex.Message;
-            }
-            int yyy = 1;
-#endif
-
-#if false
+#if false // for debug run single query
             try
             {
             var connString = "Host=localhost:5432;Username=postgres;Password=11331ca;Database=CBOEOptionData";
@@ -249,15 +152,8 @@ namespace LoadOptionDataFromCBOEData
 
             // now read actual option data from each zip file (we have 1 zip file per day), row by row, and add it to SortedList for that date
             int numFilesRead = 0;
-#if PARFOR_READDATA
             Parallel.ForEach(zipFileNameArray, new ParallelOptions { MaxDegreeOfParallelism = 16 }, (zipFileName) =>
             {
-#else
-            foreach (string zipFileName in zipFileNameArray)
-            {
-#endif
-                //using MySqlConnection conn = new(connectionString);
-                //using SqlConnection conn = new(connectionString); // Sql Server
                 using NpgsqlConnection conn = new(connectionString);
                 conn.Open();
                 using ZipArchive archive = ZipFile.OpenRead(zipFileName);
@@ -369,15 +265,9 @@ namespace LoadOptionDataFromCBOEData
                         InsertOptionData(conn, optionData);
                 }
 
-#if PARFOR_READDATA
             });
-#else
-            }
-#endif
         }
 
-        //static void InsertOptionData(MySqlConnection conn, OptionData optionData)
-        //static void InsertOptionData(SqlConnection conn, OptionData optionData)
         static void InsertOptionData(Npgsql.NpgsqlConnection conn, OptionData optionData)
         {
             const string separator = ", ";
@@ -419,8 +309,6 @@ namespace LoadOptionDataFromCBOEData
 
             // INSERT INTO dbo.OptionData VALUES ('2014-01-02 09:45:00', '2014-01-31', 1300, 'C', 'SPXW', 1837.73, 531.50, 542.60, 2.37257, 0.63362, 0.00023, 35.74354, 1.44246, 0.49846, 0, 0.16324, 1.94000);
             string command = sb.ToString();
-            //MySqlCommand sqlCommand = new(command, conn);
-            //SqlCommand sqlCommand = new(command, conn); // Sql Server
             Npgsql.NpgsqlCommand sqlCommand = new(command, conn); // Postgres
             try
             {
@@ -461,10 +349,6 @@ namespace LoadOptionDataFromCBOEData
             //row.dt = DateTime.ParseExact(fields[1], "yyyy-MM-dd HH:mm:ss", provider);
             option.QuoteDateTime = DateTime.Parse(fields[(int)CBOEFields.QuoteDateTime]);
             Debug.Assert(option.QuoteDateTime.Date == zipDate); // you can have many, many options at same date/time (different strikes)
-
-            //
-            // temporarily not interested in option greeks before 10:00:00 and after 15:30:00
-            //
 
             // not ever interested in options after 16:00:00
             switch (option.QuoteDateTime.Hour)

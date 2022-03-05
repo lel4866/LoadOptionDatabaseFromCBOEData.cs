@@ -170,7 +170,6 @@ namespace LoadOptionDataFromCBOEData
                     bool validOption;
                     OptionData option;
 
-
                     // read header
                     string line;
                     try
